@@ -1,0 +1,28 @@
+<div class="level">
+
+  <div class="level-left">
+    <h1 class="title">Rooms</h1>
+  </div>
+
+  <div class="level-right">
+    <button (click)="openModal()" class="button is-success" type="button">Create new</button>
+  </div>
+
+</div>
+
+<div *ngFor="let room of rooms$ | async" class="box">
+
+  <div class="level">
+
+    <div class="level-left">
+      {{ room.name }}
+    </div>
+
+    <div class="level-right">
+      <a [routerLink]="['/rooms',room.id]" class="button">Join</a>
+    </div>
+
+  </div>
+
+</div>
+
