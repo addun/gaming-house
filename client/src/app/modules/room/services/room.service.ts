@@ -8,7 +8,7 @@ import { Rooms } from './room.models';
 export class RoomService extends Socket {
 
   constructor(private http: HttpClient) {
-    super({ url: 'localhost:3000/' });
+    super({ url: '/' });
   }
 
   public getRooms(): Observable<Rooms> {

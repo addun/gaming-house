@@ -31,11 +31,10 @@ export class SnakeService {
   public connectToGame(gameId: string = this.gameService.gameId) {
     this.gameId = gameId;
     this.socket = new Socket({
-      url: `localhost:3000/games/${this.gameId}`,
+      url: `/games/${this.gameId}`,
     });
 
     this.socket.on('connect', () => this.logger.log(`Connected to game with id: ${this.gameId}`));
-
     this.socket.on('disconnect', () => this.logger.log(`Disconnected from game with id: ${this.gameId}`));
 
   }
