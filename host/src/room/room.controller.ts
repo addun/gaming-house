@@ -3,9 +3,7 @@ import { RoomService } from './room.service';
 
 @Controller('/api/rooms')
 export class RoomController {
-  public constructor(private  roomService: RoomService) {
-
-  }
+  public constructor(private roomService: RoomService) {}
 
   @Get('/')
   public getRooms() {

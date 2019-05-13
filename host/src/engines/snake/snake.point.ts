@@ -16,6 +16,5 @@ export class SnakePoint implements Point {
 
   public isEqual(point: SnakePoint) {
     return this.x === point.x && this.y === point.y;
-
   }
 }

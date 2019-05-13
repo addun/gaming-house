@@ -1,7 +1,6 @@
-import { BehaviorSubject, interval, Observable, Subject } from 'rxjs';
+import { interval, Observable, Subject } from 'rxjs';
 import { List } from 'immutable';
 import { SnakePoint } from './snake.point';
-import { SnakeBoard } from './snake.board';
 import { takeUntil } from 'rxjs/operators';
 
 export enum Direction {
@@ -11,35 +10,14 @@ export enum Direction {
   Left = 'LEFT',
 }
 
-const moveToDirection = (point: SnakePoint, direction: Direction): SnakePoint => {
-  switch (direction) {
-    case Direction.Right:
-      return new SnakePoint({
-        x: point.x + 1,
-        y: point.y,
-      });
-    case Direction.Down:
-      return new SnakePoint({
-        x: point.x,
-        y: point.y + 1,
-      });
-    case Direction.Left:
-      return new SnakePoint({
-        x: point.x - 1,
-        y: point.y,
-      });
-    case Direction.Up:
-      return new SnakePoint({
-        x: point.x,
-        y: point.y - 1,
-      });
-  }
-
-};
-
 export const getRandomDirection = () => {
-  const d = [Direction.Down, Direction.Left, Direction.Right, Direction.Up];
-  return d[Math.floor(Math.random() * 5)];
+  const directions = [
+    Direction.Down,
+    Direction.Left,
+    Direction.Right,
+    Direction.Up,
+  ];
+  return directions[Math.floor(Math.random() * 5)];
 };
 
 export const getDirection = (value: string): Direction => {
@@ -52,99 +30,137 @@ export const getDirection = (value: string): Direction => {
       return Direction.Right;
     case 'LEFT':
       return Direction.Left;
+    default:
+      return Direction.Right;
   }
 };
 
-const isOppositeDirection = (direction1: Direction, direction2: Direction): boolean => {
-  return direction1 === Direction.Up && direction2 === Direction.Down ||
-    direction1 === Direction.Down && direction2 === Direction.Up ||
-    direction1 === Direction.Left && direction2 === Direction.Right ||
-    direction1 === Direction.Right && direction2 === Direction.Left;
+const isOppositeDirection = (
+  direction1: Direction,
+  direction2: Direction,
+): boolean => {
+  return (
+    (direction1 === Direction.Up && direction2 === Direction.Down) ||
+    (direction1 === Direction.Down && direction2 === Direction.Up) ||
+    (direction1 === Direction.Left && direction2 === Direction.Right) ||
+    (direction1 === Direction.Right && direction2 === Direction.Left)
+  );
 };
 
 export class Snake {
-  public nextDirection: Direction = getRandomDirection();
-  private increase: boolean = false;
-  private currentDirection: Direction = this.nextDirection;
-  private body$ = new BehaviorSubject<List<SnakePoint>>(List.of());
+  public nextDirection = getRandomDirection();
+  private increase = false;
+  private currentDirection = this.nextDirection;
+  private bodyChanges$ = new Subject<List<SnakePoint>>();
   private end$ = new Subject();
+  private speed = 250;
+  /**
+   * @usageNotes
+   *
+   * Is just for keeping snake body. If you want to get or update body
+   * use snakeBody getter or setter
+   */
+  private snakeBodyKeeper: List<SnakePoint>;
 
-  public constructor(public board: SnakeBoard, initialPosition: SnakePoint = null) {
-    this.board.addSnake(this);
-    if (initialPosition === null) {
-      initialPosition = this.board.getRandomFreePoint();
-    }
-    this.body$.next(List.of(initialPosition));
+  public constructor(initialPosition: SnakePoint) {
+    this.snakeBodyKeeper = List.of(initialPosition);
   }
 
-  public get body(): List<SnakePoint> {
-    return this.body$.getValue();
+  public get body() {
+    return this.snakeBody;
   }
 
   /**
-   * Get current body and listen for changes
+   * @usageNotes
+   *
+   * If you want to get also current position you can use RxJS:
+   *
+   * @code
+   *
+   * snake.bodyChanges
+   *  .pipe(
+   *    startWith(snake.body)
+   *  ).subscribe()
    */
   public get bodyChanges(): Observable<List<SnakePoint>> {
-    return this.body$.asObservable();
+    return this.bodyChanges$.asObservable();
   }
 
   public get head(): SnakePoint {
-    return this.body.get(0);
+    return this.snakeBody.get(0);
   }
 
-  public get tail(): SnakePoint {
-    return this.body[this.body.size - 1];
+  private get snakeBody(): List<SnakePoint> {
+    return this.snakeBodyKeeper;
   }
 
-  public removeFromBoard(): void {
-    this.end$.next();
-    this.board.removeSnake(this);
+  private set snakeBody(value: List<SnakePoint>) {
+    this.snakeBodyKeeper = value;
+    this.bodyChanges$.next(this.snakeBody);
   }
 
+  /**
+   * Start to move with defined speed
+   */
   public start() {
-    interval(50).pipe(
-      takeUntil(this.end$),
-    ).subscribe(() => this.move());
+    this.end$.next();
+    interval(this.speed)
+      .pipe(takeUntil(this.end$))
+      .subscribe(() => this.move());
   }
 
+  /**
+   * Stop moving
+   */
+  public stop() {
+    this.end$.next();
+  }
+
+  /**
+   * Increase size of snake by one on next move
+   */
+  public increaseSize() {
+    this.increase = true;
+  }
+
+  /**
+   * Make one move based on current position of snake
+   */
   public move() {
     const nextPoint = this.getNextPoint();
 
-    if (!this.canGoToPoint(nextPoint)) {
-      this.end$.next();
-      return;
+    if (this.increase) {
+      this.increase = false;
+      this.snakeBody = this.body.unshift(nextPoint);
+    } else {
+      this.snakeBody = this.body.unshift(nextPoint).pop();
     }
-
-    let newBody = this.body;
-    this.increase ? this.increase = false : newBody = newBody.pop();
-    this.body$.next(newBody.unshift(nextPoint));
-
-    const isInFood = this.board.snakeFoods.some(f => f.point.isEqual(this.head));
-    if (isInFood) {
-      this.board.removeFood(this.head);
-      this.increaseSize();
-    }
-
-  }
-
-  public increaseSize() {
-    this.increase = true;
   }
 
   private getNextPoint(): SnakePoint {
     let nextPoint: SnakePoint = null;
     if (isOppositeDirection(this.currentDirection, this.nextDirection)) {
-      nextPoint = moveToDirection(this.head, this.currentDirection);
+      nextPoint = this.moveToDirection(this.currentDirection);
       this.nextDirection = this.currentDirection;
     } else {
-      nextPoint = moveToDirection(this.head, this.nextDirection);
+      nextPoint = this.moveToDirection(this.nextDirection);
       this.currentDirection = this.nextDirection;
     }
     return nextPoint;
   }
 
-  private canGoToPoint(point: SnakePoint): boolean {
-    return this.board.pointExist(point) && !this.board.snakes.some(snake => snake.body.some(position => position.isEqual(point)));
+  private moveToDirection(direction: Direction): SnakePoint {
+    switch (direction) {
+      case Direction.Right:
+        return new SnakePoint({ x: this.head.x + 1, y: this.head.y });
+      case Direction.Down:
+        return new SnakePoint({ x: this.head.x, y: this.head.y + 1 });
+      case Direction.Left:
+        return new SnakePoint({ x: this.head.x - 1, y: this.head.y });
+      case Direction.Up:
+        return new SnakePoint({ x: this.head.x, y: this.head.y - 1 });
+      default:
+        return new SnakePoint(this.head);
+    }
   }
-
 }

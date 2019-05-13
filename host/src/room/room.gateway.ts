@@ -1,4 +1,8 @@
-import { SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import {
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { Client, Server } from 'socket.io';
 import { RoomService } from './room.service';
 import { Room, RoomToCreate } from './room.models';
@@ -16,20 +20,23 @@ export class RoomGateway {
   private readonly logger = new Logger(RoomGateway.name);
   private readonly snakeGames: RoomGame = {};
 
-  public constructor(private roomService: RoomService) {
-  }
+  public constructor(private roomService: RoomService) {}
 
   @SubscribeMessage('rooms')
   handleMessage(client: Client, room: RoomToCreate): void {
     this.logger.log(`Creating new room with name: ${room.name}`);
     const createdRoom = this.roomService.createRoom(room);
-    this.logger.log(`Room created with: id: ${createdRoom.id}, name: ${createdRoom.name}`);
+    this.logger.log(
+      `Room created with: id: ${createdRoom.id}, name: ${createdRoom.name}`,
+    );
 
     this.logger.log(`Creating game with id ${createdRoom.id}`);
     // ToDo: Add support for other games
     this.snakeGames[createdRoom.id] = new SnakeEngine();
 
-    this.logger.log(`The number of games created is ${Object.keys(this.snakeGames).length}`);
+    this.logger.log(
+      `The number of games created is ${Object.keys(this.snakeGames).length}`,
+    );
 
     this.createSocketRoomNamespace(createdRoom);
 
@@ -49,9 +56,12 @@ export class RoomGateway {
     });
 
     namespace.on('connection', socket => {
-
       const user = socket.client.id;
-      this.logger.log(`User ${user} connected to namespace: ${room.id} by address ${socket.id}`);
+      this.logger.log(
+        `User ${user} connected to namespace: ${room.id} by address ${
+          socket.id
+        }`,
+      );
 
       // @ts-ignore
       game.addUser(user);
@@ -66,9 +76,12 @@ export class RoomGateway {
       socket.on('disconnect', () => {
         // @ts-ignore
         game.removeUser(user);
-        this.logger.log(`User (${user}) disconnected from namespace: ${room.id} by address ${socket.id}`);
+        this.logger.log(
+          `User (${user}) disconnected from namespace: ${room.id} by address ${
+            socket.id
+          }`,
+        );
       });
-
     });
   }
 }

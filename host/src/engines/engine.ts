@@ -26,7 +26,7 @@ class EngineManager {
   public getEngine(engineName: string): Engine {
     const engine = this.engines.find(e => e.name === engineName);
     if (typeof engine === 'undefined') {
-      throw new Error(`Cannot engine ${engineName}`);
+      throw new Error(`Cannot find engine ${engineName}`);
     }
     return engine;
   }
@@ -60,14 +60,21 @@ export const GameEngine = (): ClassDecorator => {
 export const Action = (): MethodDecorator => {
   return (target, propertyKey) => {
     engineManager.addAction(target.constructor.name, propertyKey.toString());
-    logger.log(`Registered user action ${propertyKey.toString()} in ${target.constructor.name} engine`);
+    logger.log(
+      `Registered Action -> ${Action.name.toLowerCase()} <- ${propertyKey.toString()} in ${
+        target.constructor.name
+      } engine`,
+    );
   };
 };
 
-export const Signal = (): PropertyDecorator => {
+export const Output = (): PropertyDecorator => {
   return (target, propertyKey) => {
     engineManager.addSignal(target.constructor.name, propertyKey.toString());
-    logger.log(`Registered signal ${propertyKey.toString()} in ${target.constructor.name} engine`);
+    logger.log(
+      `Registered Output ${propertyKey.toString()} in ${
+        target.constructor.name
+      } engine`,
+    );
   };
 };
-
