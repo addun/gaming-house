@@ -2,6 +2,7 @@ import { interval, Observable, Subject } from 'rxjs';
 import { List } from 'immutable';
 import { SnakePoint } from './snake.point';
 import { takeUntil } from 'rxjs/operators';
+import { tap } from 'rxjs/internal/operators/tap';
 
 export enum Direction {
   Up = 'UP',
@@ -35,7 +36,7 @@ export const getDirection = (value: string): Direction => {
   }
 };
 
-const isOppositeDirection = (
+const areDirectionsOpposite = (
   direction1: Direction,
   direction2: Direction,
 ): boolean => {
@@ -50,9 +51,8 @@ const isOppositeDirection = (
 export class Snake {
   public nextDirection = getRandomDirection();
   private increase = false;
-  private currentDirection = this.nextDirection;
   private bodyChanges$ = new Subject<List<SnakePoint>>();
-  private end$ = new Subject();
+  private end$ = new Subject<void>();
   private speed = 250;
   /**
    * @usageNotes
@@ -62,8 +62,11 @@ export class Snake {
    */
   private snakeBodyKeeper: List<SnakePoint>;
 
-  public constructor(initialPosition: SnakePoint) {
+  public constructor(initialPosition: SnakePoint, private currentDirection?) {
     this.snakeBodyKeeper = List.of(initialPosition);
+    if (typeof this.currentDirection === 'undefined') {
+      this.currentDirection = this.nextDirection;
+    }
   }
 
   public get body() {
@@ -80,7 +83,9 @@ export class Snake {
    * snake.bodyChanges
    *  .pipe(
    *    startWith(snake.body)
-   *  ).subscribe()
+   *  )
+   *  .subscribe()
+   *
    */
   public get bodyChanges(): Observable<List<SnakePoint>> {
     return this.bodyChanges$.asObservable();
@@ -103,7 +108,7 @@ export class Snake {
    * Start to move with defined speed
    */
   public start() {
-    this.end$.next();
+    this.stop();
     interval(this.speed)
       .pipe(takeUntil(this.end$))
       .subscribe(() => this.move());
@@ -139,7 +144,7 @@ export class Snake {
 
   private getNextPoint(): SnakePoint {
     let nextPoint: SnakePoint = null;
-    if (isOppositeDirection(this.currentDirection, this.nextDirection)) {
+    if (areDirectionsOpposite(this.currentDirection, this.nextDirection)) {
       nextPoint = this.moveToDirection(this.currentDirection);
       this.nextDirection = this.currentDirection;
     } else {

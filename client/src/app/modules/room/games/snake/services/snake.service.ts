@@ -4,6 +4,8 @@ import { GameService } from '../../../services/game.service';
 import { LoggerService } from '../../../../../core/logger.service';
 import { Observable } from 'rxjs';
 import { Point } from '../components/point';
+import { map, tap } from 'rxjs/operators';
+import { fromPromise } from 'rxjs/internal-compatibility';
 
 export enum Direction {
   Up = 'UP',
@@ -12,16 +14,28 @@ export enum Direction {
   Left = 'LEFT',
 }
 
+export interface Users {
+  [id: string]: {
+    id: string;
+    snake: {
+      body: Point[];
+      color: string; // #000000 format
+    };
+  };
+}
+
 @Injectable()
 export class SnakeService {
   private socket: Socket;
   private gameId: string;
 
-  constructor(private gameService: GameService, private logger: LoggerService) {
-  }
+  constructor(
+    private gameService: GameService,
+    private logger: LoggerService,
+  ) {}
 
-  public get positions(): Observable<{ id: string, positions: Point[] }[]> {
-    return this.socket.fromEvent('positions');
+  public get positions(): Observable<Users> {
+    return this.socket.fromEvent('usersChanges');
   }
 
   public get foods(): Observable<Point[]> {
@@ -34,9 +48,12 @@ export class SnakeService {
       url: `/games/${this.gameId}`,
     });
 
-    this.socket.on('connect', () => this.logger.log(`Connected to game with id: ${this.gameId}`));
-    this.socket.on('disconnect', () => this.logger.log(`Disconnected from game with id: ${this.gameId}`));
-
+    this.socket.on('connect', () =>
+      this.logger.log(`Connected to game with id: ${this.gameId}`),
+    );
+    this.socket.on('disconnect', () =>
+      this.logger.log(`Disconnected from game with id: ${this.gameId}`),
+    );
   }
 
   public disconnectFromGame() {
@@ -49,12 +66,10 @@ export class SnakeService {
 
   public moveDown() {
     this.move(Direction.Down);
-
   }
 
   public moveLeft() {
     this.move(Direction.Left);
-
   }
 
   public moveRight() {
@@ -66,7 +81,14 @@ export class SnakeService {
     this.logger.log(`Sent start to server`);
   }
 
+  public getMyId(): Observable<string> {
+    return fromPromise(this.socket.fromOneTimeEvent<string>('myId')).pipe(
+      tap(() => this.socket.emit('myId')),
+    );
+  }
+
   private move(direction: Direction) {
     this.socket.emit('move', direction);
+    this.logger.log(`Sent direction ${direction} to server`);
   }
 }

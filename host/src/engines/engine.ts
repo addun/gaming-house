@@ -1,10 +1,5 @@
 import { Logger } from '@nestjs/common';
-
-export interface Engine {
-  name: string;
-  actions: string[];
-  signals: string[];
-}
+import { Engine } from './engine.models';
 
 class EngineManager {
   private engines: Engine[] = [];

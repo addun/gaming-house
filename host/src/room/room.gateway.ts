@@ -9,6 +9,7 @@ import { Room, RoomToCreate } from './room.models';
 import { Logger } from '@nestjs/common';
 import { SnakeEngine } from '../engines/snake/snake.engine';
 import { engineManager } from '../engines/engine';
+import { hasImplementedUserEvents, UserEvents } from '../engines/engine.models';
 
 interface RoomGame {
   [key: string]: object;
@@ -63,8 +64,9 @@ export class RoomGateway {
         }`,
       );
 
-      // @ts-ignore
-      game.addUser(user);
+      if (hasImplementedUserEvents(game)) {
+        game.onUserJoin(user);
+      }
 
       engine.actions.forEach(action => {
         socket.on(action, data => {
@@ -74,8 +76,9 @@ export class RoomGateway {
       });
 
       socket.on('disconnect', () => {
-        // @ts-ignore
-        game.removeUser(user);
+        if (hasImplementedUserEvents(game)) {
+          game.onUserLeave(user);
+        }
         this.logger.log(
           `User (${user}) disconnected from namespace: ${room.id} by address ${
             socket.id
