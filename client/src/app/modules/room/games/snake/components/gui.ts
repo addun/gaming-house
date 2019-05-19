@@ -3,16 +3,20 @@ import { Point } from './point';
 interface TilePosition {
   center: Point;
   corner: {
-    topRight: Point,
-    topLeft: Point,
-    bottomRight: Point,
-    bottomLeft: Point,
+    topRight: Point;
+    topLeft: Point;
+    bottomRight: Point;
+    bottomLeft: Point;
   };
   width: number;
   height: number;
 }
 
-const countMetaPositions = (center: Point, width: number, height: number): TilePosition => {
+const countMetaPositions = (
+  center: Point,
+  width: number,
+  height: number,
+): TilePosition => {
   const startX = center.x - width / 2;
   const endX = center.x + width / 2;
   const topY = center.y - height / 2;
@@ -22,34 +26,40 @@ const countMetaPositions = (center: Point, width: number, height: number): TileP
     height,
     width,
     corner: {
-      topRight: ({
-        x: endX, y: topY,
-      }),
-      topLeft: ({
-        x: startX, y: topY,
-      }),
-      bottomRight: ({
-        x: endX, y: bottomY,
-      }),
-      bottomLeft: ({
-        x: startX, y: bottomY,
-      }),
+      topRight: {
+        x: endX,
+        y: topY,
+      },
+      topLeft: {
+        x: startX,
+        y: topY,
+      },
+      bottomRight: {
+        x: endX,
+        y: bottomY,
+      },
+      bottomLeft: {
+        x: startX,
+        y: bottomY,
+      },
     },
   };
 };
 
 export class GUI {
-
   public height: number;
   public width: number;
   private tiles: TilePosition[][] = [];
 
-  public constructor(private ctx: CanvasRenderingContext2D, public config: any = {
-    size: {
-      y: 100,
-      x: 100,
+  public constructor(
+    private ctx: CanvasRenderingContext2D,
+    public config = {
+      size: {
+        y: 100,
+        x: 100,
+      },
     },
-  }) {
+  ) {
     this.width = ctx.canvas.width;
     this.height = ctx.canvas.height;
     this.setup();
@@ -80,14 +90,11 @@ export class GUI {
       const tileY: TilePosition[] = [];
       for (let currentPositionY = 0, j = 0; j < this.config.size.y; ++j) {
         const y = currentPositionY + distanceToMiddleY;
-        tileY.push(countMetaPositions(({ x, y }), stepX, stepY));
+        tileY.push(countMetaPositions({ x, y }, stepX, stepY));
         currentPositionY += stepY;
       }
       this.tiles.push(tileY);
       currentPositionX += stepX;
     }
   }
-
 }
-
-

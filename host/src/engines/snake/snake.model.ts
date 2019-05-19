@@ -2,7 +2,8 @@ import { interval, Observable, Subject } from 'rxjs';
 import { List } from 'immutable';
 import { SnakePoint } from './snake.point';
 import { takeUntil } from 'rxjs/operators';
-import { tap } from 'rxjs/internal/operators/tap';
+import { Board } from './snake.board';
+import { SnakeBodyElement } from './snake.power-ups';
 
 export enum Direction {
   Up = 'UP',
@@ -62,8 +63,17 @@ export class Snake {
    */
   private snakeBodyKeeper: List<SnakePoint>;
 
-  public constructor(initialPosition: SnakePoint, private currentDirection?) {
+  public constructor(
+    private board: Board,
+    initialPosition?: SnakePoint,
+    private currentDirection?,
+  ) {
+    if (typeof initialPosition === 'undefined') {
+      initialPosition = this.board.getFreeTilePosition();
+      this.setSnakeBodyElementOnBoard(initialPosition);
+    }
     this.snakeBodyKeeper = List.of(initialPosition);
+    this.setSnakeBodyElementOnBoard(initialPosition);
     if (typeof this.currentDirection === 'undefined') {
       this.currentDirection = this.nextDirection;
     }
@@ -95,6 +105,10 @@ export class Snake {
     return this.snakeBody.get(0);
   }
 
+  public get tail(): SnakePoint {
+    return this.snakeBody.get(this.snakeBody.size - 1);
+  }
+
   private get snakeBody(): List<SnakePoint> {
     return this.snakeBodyKeeper;
   }
@@ -122,7 +136,7 @@ export class Snake {
   }
 
   /**
-   * Increase size of snake by one on next move
+   * Increase size of snake by one on the next move
    */
   public increaseSize() {
     this.increase = true;
@@ -132,14 +146,49 @@ export class Snake {
    * Make one move based on current position of snake
    */
   public move() {
-    const nextPoint = this.getNextPoint();
+    let nextPoint = this.getNextPoint();
+    const outside = this.board.isOutside(nextPoint);
+    if (outside !== null) {
+      switch (outside) {
+        case Direction.Up:
+          nextPoint = new SnakePoint({
+            x: nextPoint.x,
+            y: this.board.getTopLeft().y,
+          });
+          break;
+        case Direction.Down:
+          nextPoint = new SnakePoint({
+            x: nextPoint.x,
+            y: this.board.getBottomRight().y,
+          });
+          break;
+        case Direction.Left:
+          nextPoint = new SnakePoint({
+            x: this.board.getBottomRight().x,
+            y: nextPoint.y,
+          });
+          break;
+        case Direction.Right:
+          nextPoint = new SnakePoint({
+            x: this.board.getTopLeft().x,
+            y: nextPoint.y,
+          });
+          break;
+      }
+    }
 
     if (this.increase) {
       this.increase = false;
       this.snakeBody = this.body.unshift(nextPoint);
     } else {
+      this.removeSnakeBodyElementOnBoard(this.tail);
       this.snakeBody = this.body.unshift(nextPoint).pop();
     }
+    const powerUpOnPoint = this.board.getPowerUp(this.head);
+    if (powerUpOnPoint !== null) {
+      powerUpOnPoint.onPickUp(this);
+    }
+    this.setSnakeBodyElementOnBoard(this.head);
   }
 
   private getNextPoint(): SnakePoint {
@@ -167,5 +216,13 @@ export class Snake {
       default:
         return new SnakePoint(this.head);
     }
+  }
+
+  private setSnakeBodyElementOnBoard(point: SnakePoint) {
+    this.board.setPowerUp(point, new SnakeBodyElement());
+  }
+
+  private removeSnakeBodyElementOnBoard(point: SnakePoint) {
+    this.board.clearPowerUp(point);
   }
 }

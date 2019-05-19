@@ -1,21 +1,30 @@
 import { Direction, Snake } from './snake.model';
 import { SnakePoint } from './snake.point';
+import { Board } from './snake.board';
+import { Point } from '../point.model';
+import { SnakeBodyElement } from './snake.power-ups';
 
 describe('Snake', () => {
   let snake: Snake;
+  let board: Board;
+  let initialPositionOfSnake: SnakePoint;
 
   beforeEach(() => {
-    snake = new Snake(
-      new SnakePoint({
-        x: 10,
-        y: 10,
+    board = new Board(
+      new Point({
+        x: 20,
+        y: 20,
       }),
-      Direction.Right,
     );
+    initialPositionOfSnake = new SnakePoint({
+      x: 10,
+      y: 10,
+    });
+    snake = new Snake(board, initialPositionOfSnake, Direction.Right);
+    snake.nextDirection = Direction.Right;
   });
 
   it('should increase size in the next move', () => {
-    snake.nextDirection = Direction.Right;
     snake.increaseSize();
     snake.move();
 
@@ -31,7 +40,6 @@ describe('Snake', () => {
   });
 
   it('should change position after start and after waiting 700 ms', done => {
-    snake.nextDirection = Direction.Right;
     snake.start();
     setTimeout(() => {
       expect(snake.head).toEqual({
@@ -43,7 +51,6 @@ describe('Snake', () => {
   });
 
   it(`should change position after start, don't move after stop and move again after start`, done => {
-    snake.nextDirection = Direction.Right;
     snake.start();
 
     setTimeout(() => {
@@ -64,7 +71,6 @@ describe('Snake', () => {
   });
 
   it('should receive current position after move', done => {
-    snake.nextDirection = Direction.Right;
     snake.bodyChanges.subscribe(positions => {
       expect(positions.get(0)).toEqual({
         x: 11,
@@ -73,5 +79,35 @@ describe('Snake', () => {
       done();
     });
     snake.move();
+  });
+
+  it('should clear/add tile after snake move', () => {
+    let powerUp = board.getPowerUp(initialPositionOfSnake);
+    expect(powerUp).toBeInstanceOf(SnakeBodyElement);
+
+    snake.move();
+
+    powerUp = board.getPowerUp(initialPositionOfSnake);
+    expect(powerUp).toBeNull();
+
+    powerUp = board.getPowerUp(snake.head);
+    expect(powerUp).toBeInstanceOf(SnakeBodyElement);
+  });
+
+  describe('move()', () => {
+    let initialPositionOnTopLeft;
+    let initialPositionOnBottomRight;
+
+    beforeEach(() => {
+      initialPositionOnTopLeft = board.getTopLeft();
+      initialPositionOnBottomRight = board.getBottomRight();
+    });
+
+    it('should appear on the top and show on the bottom', () => {
+      snake = new Snake(board, initialPositionOnTopLeft, Direction.Up);
+      snake.nextDirection = Direction.Up;
+      snake.move();
+      expect(snake.head.y).toEqual(board.getBottomRight().y);
+    });
   });
 });

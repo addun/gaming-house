@@ -4,7 +4,7 @@ import { GameService } from '../../../services/game.service';
 import { LoggerService } from '../../../../../core/logger.service';
 import { Observable } from 'rxjs';
 import { Point } from '../components/point';
-import { map, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { fromPromise } from 'rxjs/internal-compatibility';
 
 export enum Direction {
@@ -14,14 +14,9 @@ export enum Direction {
   Left = 'LEFT',
 }
 
-export interface Users {
-  [id: string]: {
-    id: string;
-    snake: {
-      body: Point[];
-      color: string; // #000000 format
-    };
-  };
+export interface Board {
+  size: Point;
+  tiles: {}[][];
 }
 
 @Injectable()
@@ -34,12 +29,8 @@ export class SnakeService {
     private logger: LoggerService,
   ) {}
 
-  public get positions(): Observable<Users> {
-    return this.socket.fromEvent('usersChanges');
-  }
-
-  public get foods(): Observable<Point[]> {
-    return this.socket.fromEvent('foods');
+  public get positions(): Observable<Board> {
+    return this.socket.fromEvent('boardChanges');
   }
 
   public connectToGame(gameId: string = this.gameService.gameId) {

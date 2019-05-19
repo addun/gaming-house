@@ -10,7 +10,6 @@ import {
 import { SnakeService } from '../../services/snake.service';
 import { GUI } from '../../components/gui';
 import { GameService } from '../../../../services/game.service';
-import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-snake',
@@ -54,13 +53,18 @@ export class SnakeComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit(): void {
     const board = new GUI(this.board.nativeElement.getContext('2d'));
 
-    combineLatest(this.snakeService.positions).subscribe(([users]) => {
+    this.snakeService.positions.subscribe(state => {
       board.clear();
-      Object.values(users).forEach(user => {
-        user.snake.body.forEach(p => {
-          board.fillTile(p, user.snake.color);
-        });
-      });
+      state.tiles.forEach((row, indexOfRow) =>
+        row.forEach((elInRow, indexOfColumn) => {
+          if (elInRow !== null) {
+            board.fillTile({
+              x: indexOfRow,
+              y: indexOfColumn,
+            });
+          }
+        }),
+      );
     });
   }
 

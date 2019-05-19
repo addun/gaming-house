@@ -1,18 +1,50 @@
-import { Point } from '../point.model';
 import { Snake } from './snake.model';
 
 export interface SnakePowerUp {
-  readonly point: Point;
-
   onPickUp(snake: Snake): void;
 }
 
-export class SnakeFood implements SnakePowerUp {
-  constructor(public readonly point: Point) {
-    this.point = point;
-  }
+export interface PowerUpConfig {
+  color?: string;
+  exclude?: true;
+}
 
+export interface PowerUpMetaData {
+  color: string;
+  exclude: boolean;
+  className: string;
+}
+
+export const powerUps: PowerUpMetaData[] = [];
+
+export function PowerUp(config: PowerUpConfig): ClassDecorator {
+  return target => {
+    powerUps.push({
+      ...{
+        color: '#000',
+        exclude: false,
+        className: target.name,
+      },
+      ...config,
+    });
+  };
+}
+
+@PowerUp({
+  color: '#F00',
+})
+export class SnakeFood implements SnakePowerUp {
   onPickUp(snake: Snake): void {
     snake.increaseSize();
+  }
+}
+
+@PowerUp({
+  color: '#0F0',
+  exclude: true,
+})
+export class SnakeBodyElement implements SnakePowerUp {
+  onPickUp(snake: Snake): void {
+    snake.stop();
   }
 }
