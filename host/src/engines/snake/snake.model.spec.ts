@@ -107,7 +107,7 @@ describe('Snake', () => {
       snake = new Snake(board, initialPositionOnTopLeft, Direction.Up);
       snake.nextDirection = Direction.Up;
       snake.move();
-      expect(snake.head.y).toEqual(board.getBottomRight().y);
+      expect(snake.head.x).toEqual(board.getBottomRight().y);
     });
   });
 });

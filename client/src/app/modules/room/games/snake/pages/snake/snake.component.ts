@@ -7,7 +7,7 @@ import {
   OnInit,
   ViewChild,
 } from '@angular/core';
-import { SnakeService } from '../../services/snake.service';
+import { SnakeService, stringToColor } from '../../services/snake.service';
 import { GUI } from '../../components/gui';
 import { GameService } from '../../../../services/game.service';
 
@@ -19,10 +19,7 @@ import { GameService } from '../../../../services/game.service';
 export class SnakeComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('board') public board: ElementRef<HTMLCanvasElement>;
 
-  constructor(
-    private snakeService: SnakeService,
-    private gameService: GameService,
-  ) {}
+  constructor(private snakeService: SnakeService) {}
 
   ngOnInit() {
     this.snakeService.connectToGame();
@@ -58,10 +55,13 @@ export class SnakeComponent implements OnInit, OnDestroy, AfterViewInit {
       state.tiles.forEach((row, indexOfRow) =>
         row.forEach((elInRow, indexOfColumn) => {
           if (elInRow !== null) {
-            board.fillTile({
-              x: indexOfRow,
-              y: indexOfColumn,
-            });
+            board.fillTile(
+              {
+                x: indexOfRow,
+                y: indexOfColumn,
+              },
+              stringToColor(elInRow.id),
+            );
           }
         }),
       );

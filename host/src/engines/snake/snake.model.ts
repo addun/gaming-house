@@ -1,7 +1,7 @@
-import { interval, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, interval, Observable, Subject } from 'rxjs';
 import { List } from 'immutable';
 import { SnakePoint } from './snake.point';
-import { takeUntil } from 'rxjs/operators';
+import { skip, takeUntil } from 'rxjs/operators';
 import { Board } from './snake.board';
 import { SnakeBodyElement } from './snake.power-ups';
 
@@ -51,8 +51,10 @@ const areDirectionsOpposite = (
 
 export class Snake {
   public nextDirection = getRandomDirection();
+
   private increase = false;
   private bodyChanges$ = new Subject<List<SnakePoint>>();
+  private killed$ = new BehaviorSubject(false);
   private end$ = new Subject<void>();
   private speed = 250;
   /**
@@ -77,6 +79,14 @@ export class Snake {
     if (typeof this.currentDirection === 'undefined') {
       this.currentDirection = this.nextDirection;
     }
+  }
+
+  public get isKilled() {
+    return this.killed$.getValue();
+  }
+
+  public get killedChanges() {
+    return this.killed$.asObservable().pipe(skip(1));
   }
 
   public get body() {
@@ -118,13 +128,21 @@ export class Snake {
     this.bodyChanges$.next(this.snakeBody);
   }
 
+  public kill() {
+    this.killed$.next(true);
+    this.killed$.complete();
+  }
+
   /**
    * Start to move with defined speed
    */
   public start() {
     this.stop();
-    interval(this.speed)
-      .pipe(takeUntil(this.end$))
+    interval(100000 / this.speed)
+      .pipe(
+        takeUntil(this.end$),
+        takeUntil(this.killedChanges),
+      )
       .subscribe(() => this.move());
   }
 
@@ -133,6 +151,12 @@ export class Snake {
    */
   public stop() {
     this.end$.next();
+  }
+
+  public changeSpeed(lambda: (speed: number) => number) {
+    this.stop();
+    this.speed = lambda(this.speed);
+    this.start();
   }
 
   /**
@@ -147,34 +171,8 @@ export class Snake {
    */
   public move() {
     let nextPoint = this.getNextPoint();
-    const outside = this.board.isOutside(nextPoint);
-    if (outside !== null) {
-      switch (outside) {
-        case Direction.Up:
-          nextPoint = new SnakePoint({
-            x: nextPoint.x,
-            y: this.board.getTopLeft().y,
-          });
-          break;
-        case Direction.Down:
-          nextPoint = new SnakePoint({
-            x: nextPoint.x,
-            y: this.board.getBottomRight().y,
-          });
-          break;
-        case Direction.Left:
-          nextPoint = new SnakePoint({
-            x: this.board.getBottomRight().x,
-            y: nextPoint.y,
-          });
-          break;
-        case Direction.Right:
-          nextPoint = new SnakePoint({
-            x: this.board.getTopLeft().x,
-            y: nextPoint.y,
-          });
-          break;
-      }
+    if (null !== this.board.isOutside(nextPoint)) {
+      nextPoint = this.moveThroughTheWall(nextPoint);
     }
 
     if (this.increase) {
@@ -189,6 +187,37 @@ export class Snake {
       powerUpOnPoint.onPickUp(this);
     }
     this.setSnakeBodyElementOnBoard(this.head);
+  }
+
+  private moveThroughTheWall(nextPoint: SnakePoint) {
+    const through = this.board.isOutside(nextPoint);
+    switch (through) {
+      case Direction.Up:
+        nextPoint = new SnakePoint({
+          x: nextPoint.x,
+          y: this.board.getTopLeft().y,
+        });
+        break;
+      case Direction.Down:
+        nextPoint = new SnakePoint({
+          x: nextPoint.x,
+          y: this.board.getBottomRight().y,
+        });
+        break;
+      case Direction.Left:
+        nextPoint = new SnakePoint({
+          x: this.board.getBottomRight().x,
+          y: nextPoint.y,
+        });
+        break;
+      case Direction.Right:
+        nextPoint = new SnakePoint({
+          x: this.board.getTopLeft().x,
+          y: nextPoint.y,
+        });
+        break;
+    }
+    return nextPoint;
   }
 
   private getNextPoint(): SnakePoint {

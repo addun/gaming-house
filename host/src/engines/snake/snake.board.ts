@@ -1,20 +1,24 @@
-import { SnakePowerUp } from './snake.power-ups';
+import { POWER_UP_META_DATA_KEY, SnakePowerUp } from './snake.power-ups';
 import { Point } from '../point.model';
 import { BehaviorSubject } from 'rxjs';
 import { Direction } from './snake.model';
 
 export type PowerUpOnBoard = SnakePowerUp | null;
 
+export interface TileData {
+  color: string;
+}
+
 export interface BoardState {
   size: Point;
-  tiles: SnakePowerUp[][];
+  tiles: TileData[][];
 }
 
 export class Board {
   private readonly board: PowerUpOnBoard[][] = [];
   private changesKeeper$ = new BehaviorSubject<BoardState>({
     size: this.size,
-    tiles: this.board,
+    tiles: this.parseBoardToEmit(),
   });
 
   public get state() {
@@ -124,7 +128,17 @@ export class Board {
     this.board[point.x][point.y] = powerUp;
     this.changesKeeper$.next({
       size: this.size,
-      tiles: this.board,
+      tiles: this.parseBoardToEmit(),
     });
+  }
+
+  private parseBoardToEmit() {
+    return this.board.map(row => row.map(this.parseTileToEmit));
+  }
+
+  private parseTileToEmit(tile: PowerUpOnBoard) {
+    return tile === null
+      ? null
+      : Reflect.getMetadata(POWER_UP_META_DATA_KEY, tile.constructor);
   }
 }

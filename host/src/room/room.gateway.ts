@@ -9,7 +9,7 @@ import { Room, RoomToCreate } from './room.models';
 import { Logger } from '@nestjs/common';
 import { SnakeEngine } from '../engines/snake/snake.engine';
 import { engineManager } from '../engines/engine';
-import { hasImplementedUserEvents, UserEvents } from '../engines/engine.models';
+import { hasImplementedUserEvents } from '../engines/engine.models';
 
 interface RoomGame {
   [key: string]: object;
@@ -52,10 +52,6 @@ export class RoomGateway {
 
     const engine = engineManager.getEngine(game.constructor.name);
 
-    engine.signals.forEach(signal => {
-      game[signal].subscribe(data => namespace.emit(signal, data));
-    });
-
     namespace.on('connection', socket => {
       const user = socket.client.id;
       this.logger.log(
@@ -73,6 +69,10 @@ export class RoomGateway {
           this.logger.log(`User ${user} send data ${data} to action ${action}`);
           game[action](user, data);
         });
+      });
+
+      engine.signals.forEach(signal => {
+        game[signal].subscribe(data => namespace.emit(signal, data));
       });
 
       socket.on('disconnect', () => {

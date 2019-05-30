@@ -1,14 +1,18 @@
-<div class="level">
-
-  <div class="level-left">
+<div class="columns">
+  <div class="column">
     <canvas #board width="500" height="500"></canvas>
   </div>
+  <div class="column">
+    <div class="card">
+      <header class="card-header">
+        <h3 class="card-header-title">Legend</h3>
+      </header>
+      <div class="card-content">
+        <app-power-ups-legend></app-power-ups-legend>
+      </div>
+    </div>
 
-  <div class="level-right">
-    <p>It's you -> </p>
+    <p>It's you -></p>
     <button (click)="startGame()" class="button is-success">START</button>
   </div>
-
 </div>
-
-

@@ -55,8 +55,8 @@ export class GUI {
     private ctx: CanvasRenderingContext2D,
     public config = {
       size: {
-        y: 100,
-        x: 100,
+        y: 25,
+        x: 25,
       },
     },
   ) {
