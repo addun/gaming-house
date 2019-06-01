@@ -56,7 +56,7 @@ export class Snake {
   private bodyChanges$ = new Subject<List<SnakePoint>>();
   private killed$ = new BehaviorSubject(false);
   private end$ = new Subject<void>();
-  private speed = 250;
+  private speed = 2;
   /**
    * @usageNotes
    *
@@ -138,7 +138,7 @@ export class Snake {
    */
   public start() {
     this.stop();
-    interval(100000 / this.speed)
+    interval(1000 / this.speed)
       .pipe(
         takeUntil(this.end$),
         takeUntil(this.killedChanges),
@@ -171,7 +171,7 @@ export class Snake {
    */
   public move() {
     let nextPoint = this.getNextPoint();
-    if (null !== this.board.isOutside(nextPoint)) {
+    if (this.board.isOutside(nextPoint) !== null) {
       nextPoint = this.moveThroughTheWall(nextPoint);
     }
 

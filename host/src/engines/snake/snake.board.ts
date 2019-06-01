@@ -2,6 +2,7 @@ import { POWER_UP_META_DATA_KEY, SnakePowerUp } from './snake.power-ups';
 import { Point } from '../point.model';
 import { BehaviorSubject } from 'rxjs';
 import { Direction } from './snake.model';
+import { auditTime } from 'rxjs/operators';
 
 export type PowerUpOnBoard = SnakePowerUp | null;
 
@@ -21,14 +22,6 @@ export class Board {
     tiles: this.parseBoardToEmit(),
   });
 
-  public get state() {
-    return this.changesKeeper$.getValue();
-  }
-
-  public get changes$() {
-    return this.changesKeeper$.asObservable();
-  }
-
   public constructor(public readonly size: Point) {
     this.board = [];
     for (let i = 0; i < size.x; i++) {
@@ -39,6 +32,14 @@ export class Board {
         this.board[i][j] = null;
       }
     }
+  }
+
+  public get state() {
+    return this.changesKeeper$.getValue();
+  }
+
+  public get changes$() {
+    return this.changesKeeper$.pipe(auditTime(1000 / 10)); // 10 FPS
   }
 
   public isOutside(point: Point): null | Direction {
@@ -61,6 +62,7 @@ export class Board {
       y: this.size.y - 1,
     });
   }
+
   public getBottomRight(): Point {
     return new Point({
       x: this.size.x - 1,
