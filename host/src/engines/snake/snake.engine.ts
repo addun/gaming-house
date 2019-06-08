@@ -3,15 +3,9 @@ import { Action, GameEngine, Output } from '../engine';
 import { Point } from '../point.model';
 import { UserEvents } from '../engine.models';
 import { getDirection, Snake } from './snake.model';
-import { POWER_UPS, SnakeFood } from './snake.power-ups';
+import { POWER_UPS } from './snake.power-ups';
 import { Board } from './snake.board';
-import {
-  BehaviorSubject,
-  forkJoin,
-  interval,
-  ReplaySubject,
-  Subject,
-} from 'rxjs';
+import { forkJoin, interval, Subject } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 interface Users {
@@ -23,13 +17,12 @@ interface Users {
 
 @GameEngine()
 export class SnakeEngine implements UserEvents {
+  @Output() public userChanges = new Subject<string[]>();
   private board = new Board(new Point({ x: 25, y: 25 }));
+  @Output() public boardChanges = this.board.changes$;
   private users: Users = {};
   private readonly logger = new Logger(SnakeEngine.name);
   private gameStarted = false;
-
-  @Output() public boardChanges = this.board.changes$;
-  @Output() public userChanges = new Subject<string[]>();
 
   private get userCount(): number {
     return Object.keys(this.users).length;
@@ -87,9 +80,8 @@ export class SnakeEngine implements UserEvents {
   }
 
   private addPowerUp(): void {
-    const PowerUpConstructor =
-      POWER_UPS[Math.floor(Math.random() * POWER_UPS.length)];
-    const powerUp = new PowerUpConstructor();
-    this.board.setPowerUpOnFreeTile(powerUp);
+    const powerUps = POWER_UPS.filter(p => !p.config.exclude);
+    const powerUp = powerUps[Math.floor(Math.random() * powerUps.length)];
+    this.board.setPowerUpOnFreeTile(new powerUp.target());
   }
 }

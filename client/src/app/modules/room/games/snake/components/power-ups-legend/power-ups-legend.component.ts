@@ -6,7 +6,7 @@ import { Component, HostBinding } from '@angular/core';
   styleUrls: ['./power-ups-legend.component.sass'],
 })
 export class PowerUpsLegendComponent {
-  powerUps: { name: string; description: string }[] = [
+  public powerUps: { name: string; description: string }[] = [
     {
       name: 'SnakeFood',
       description: 'Increase size',
@@ -19,11 +19,7 @@ export class PowerUpsLegendComponent {
       name: 'LazyFood',
       description: 'Decrease speed',
     },
-    {
-      name: 'SnakeBodyElement',
-      description: 'Block',
-    },
   ];
 
-  @HostBinding('class.card') cardClass = true;
+  @HostBinding('class.card') public cardClass = true;
 }

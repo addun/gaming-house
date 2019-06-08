@@ -6,25 +6,31 @@ export interface SnakePowerUp {
 }
 
 export interface SnakePowerUpConstructor {
-  new (): SnakePowerUp;
+  target: { new (): SnakePowerUp };
+  config: PowerUpConfig;
 }
 
 export interface PowerUpConfig {
   id?: string;
+  exclude?: boolean;
 }
 
 export const POWER_UP_META_DATA_KEY = 'POWER_UP_META_DATA_KEY';
 export const POWER_UPS: SnakePowerUpConstructor[] = [];
 
-export function PowerUp(config: PowerUpConfig): any {
+export function PowerUp(config: PowerUpConfig): ClassDecorator {
   return target => {
-    const mergedConfig = {
+    const mergedConfig: PowerUpConfig = {
       id: target.name,
+      exclude: false,
       ...config,
     };
     Reflect.defineMetadata(POWER_UP_META_DATA_KEY, mergedConfig, target);
     // @ts-ignore
-    POWER_UPS.push(target);
+    POWER_UPS.push({
+      target,
+      config: mergedConfig,
+    } as SnakePowerUpConstructor);
   };
 }
 
@@ -51,7 +57,9 @@ export class LazyFood implements SnakePowerUp {
   }
 }
 
-@PowerUp({})
+@PowerUp({
+  exclude: true,
+})
 export class SnakeBodyElement implements SnakePowerUp {
   onPickUp(snake: Snake): void {
     snake.kill();
