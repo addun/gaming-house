@@ -16,26 +16,21 @@ import { share } from 'rxjs/operators';
   selector: 'app-snake',
   templateUrl: './snake.component.html',
   styleUrls: ['./snake.component.sass'],
+  providers: [SnakeService],
 })
-export class SnakeComponent implements OnInit, OnDestroy, AfterViewInit {
+export class SnakeComponent implements OnInit, AfterViewInit {
   @ViewChild('board') public board: ElementRef<HTMLCanvasElement>;
   @ViewChild('canvasContainer') public canvasContainer: ElementRef<HTMLElement>;
 
   public started = false;
   public users$: Observable<string[]>;
-  private myId$: Observable<string>;
+  public myId$: Observable<string>;
 
   public constructor(private snakeService: SnakeService) {}
 
   public ngOnInit() {
-    this.snakeService.connectToGame();
     this.users$ = this.snakeService.users();
-    this.snakeService.getMyId().subscribe(console.warn);
     this.myId$ = this.snakeService.getMyId().pipe(share());
-  }
-
-  public ngOnDestroy(): void {
-    this.snakeService.disconnectFromGame();
   }
 
   @HostListener('window:resize', ['$event'])

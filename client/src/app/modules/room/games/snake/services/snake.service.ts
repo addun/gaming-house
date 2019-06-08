@@ -1,10 +1,9 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnDestroy } from '@angular/core';
 import { Socket } from 'ngx-socket-io';
 import { GameService } from '../../../services/game.service';
 import { LoggerService } from '../../../../../core/logger.service';
-import { defer, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { Point } from '../components/point';
-import { startWith, tap } from 'rxjs/operators';
 import { fromPromise } from 'rxjs/internal-compatibility';
 
 export enum Direction {
@@ -39,30 +38,31 @@ export const stringToColor = str => {
 };
 
 @Injectable()
-export class SnakeService {
+export class SnakeService implements OnDestroy {
   private socket: Socket;
-  private gameId: string;
 
-  constructor(
-    private gameService: GameService,
-    private logger: LoggerService,
-  ) {}
+  constructor(private gameService: GameService, private logger: LoggerService) {
+    this.connectToGame();
+  }
 
   public get positions(): Observable<Board> {
     return this.socket.fromEvent('boardChanges');
   }
 
-  public connectToGame(gameId: string = this.gameService.gameId) {
-    this.gameId = gameId;
-    this.socket = new Socket({
-      url: `/games/${this.gameId}`,
-    });
+  ngOnDestroy(): void {
+    this.disconnectFromGame();
+  }
+
+  public connectToGame() {
+    this.socket = new Socket({ url: `/games/${this.gameService.gameId}` });
 
     this.socket.on('connect', () =>
-      this.logger.log(`Connected to game with id: ${this.gameId}`),
+      this.logger.log(`Connected to game with id: ${this.gameService.gameId}`),
     );
     this.socket.on('disconnect', () =>
-      this.logger.log(`Disconnected from game with id: ${this.gameId}`),
+      this.logger.log(
+        `Disconnected from game with id: ${this.gameService.gameId}`,
+      ),
     );
   }
 
