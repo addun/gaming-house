@@ -1,5 +1,10 @@
-<app-power-up-detail
-  *ngFor="let powerUp of powerUps"
-  [name]="powerUp.name"
-  [description]="powerUp.description"
-></app-power-up-detail>
+<header class="card-header">
+  <h3 class="card-header-title">Legend</h3>
+</header>
+<div class="card-content">
+  <app-power-up-detail
+    *ngFor="let powerUp of powerUps"
+    [description]="powerUp.description"
+    [name]="powerUp.name"
+  ></app-power-up-detail>
+</div>

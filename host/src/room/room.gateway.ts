@@ -64,6 +64,11 @@ export class RoomGateway {
         game.onUserJoin(user);
       }
 
+      socket.on('myId', () => {
+        this.logger.log(`Getting my id`);
+        socket.emit('myId', socket.client.id);
+      });
+
       engine.actions.forEach(action => {
         socket.on(action, data => {
           this.logger.log(`User ${user} send data ${data} to action ${action}`);

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding } from '@angular/core';
 
 @Component({
   selector: 'app-power-ups-legend',
@@ -24,4 +24,6 @@ export class PowerUpsLegendComponent {
       description: 'Block',
     },
   ];
+
+  @HostBinding('class.card') cardClass = true;
 }

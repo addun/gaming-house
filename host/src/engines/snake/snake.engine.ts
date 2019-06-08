@@ -5,7 +5,13 @@ import { UserEvents } from '../engine.models';
 import { getDirection, Snake } from './snake.model';
 import { POWER_UPS, SnakeFood } from './snake.power-ups';
 import { Board } from './snake.board';
-import { forkJoin, interval } from 'rxjs';
+import {
+  BehaviorSubject,
+  forkJoin,
+  interval,
+  ReplaySubject,
+  Subject,
+} from 'rxjs';
 import { delay } from 'rxjs/operators';
 
 interface Users {
@@ -23,6 +29,7 @@ export class SnakeEngine implements UserEvents {
   private gameStarted = false;
 
   @Output() public boardChanges = this.board.changes$;
+  @Output() public userChanges = new Subject<string[]>();
 
   private get userCount(): number {
     return Object.keys(this.users).length;
@@ -38,11 +45,13 @@ export class SnakeEngine implements UserEvents {
       id,
       snake,
     };
+    this.userChanges.next(Object.values(this.users).map(u => u.id));
     this.logger.log(`Snake with id ${id} added to board`);
   }
 
   public onUserLeave(id: string) {
     delete this.users[id];
+    this.userChanges.next(Object.values(this.users).map(u => u.id));
     this.logger.log(
       `User ${id} removed from game. Number of connected users: ${
         this.userCount

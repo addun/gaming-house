@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { Socket } from 'ngx-socket-io';
 import { GameService } from '../../../services/game.service';
 import { LoggerService } from '../../../../../core/logger.service';
-import { Observable } from 'rxjs';
+import { defer, Observable } from 'rxjs';
 import { Point } from '../components/point';
-import { tap } from 'rxjs/operators';
+import { startWith, tap } from 'rxjs/operators';
 import { fromPromise } from 'rxjs/internal-compatibility';
 
 export enum Direction {
@@ -70,6 +70,10 @@ export class SnakeService {
     this.socket.disconnect();
   }
 
+  public users(): Observable<string[]> {
+    return this.socket.fromEvent<string[]>('userChanges');
+  }
+
   public moveUp() {
     this.move(Direction.Up);
   }
@@ -92,9 +96,15 @@ export class SnakeService {
   }
 
   public getMyId(): Observable<string> {
-    return fromPromise(this.socket.fromOneTimeEvent<string>('myId')).pipe(
-      tap(() => this.socket.emit('myId')),
-    );
+    return Observable.create(observe => {
+      fromPromise(this.socket.fromOneTimeEvent<string>('myId')).subscribe(
+        id => {
+          observe.next(id);
+          observe.complete();
+        },
+      );
+      this.socket.emit('myId');
+    });
   }
 
   private move(direction: Direction) {
