@@ -8,5 +8,6 @@ import { Component, HostBinding, Input } from '@angular/core';
 export class ConnectedUsersComponent {
   @Input() public users: string[] = [];
   @Input() public loggedUser: string;
+  @Input() public userColor: string;
   @HostBinding('class.card') public card = true;
 }

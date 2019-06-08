@@ -15,6 +15,8 @@ export enum Direction {
 
 export interface Tile {
   id: string;
+  userBlock: boolean;
+  userId?: string;
 }
 
 export interface Board {
@@ -23,6 +25,9 @@ export interface Board {
 }
 
 export const stringToColor = str => {
+  if (!str) {
+    return '#ffffff';
+  }
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     // tslint:disable-next-line:no-bitwise

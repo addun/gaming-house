@@ -1,4 +1,8 @@
-import { POWER_UP_META_DATA_KEY, SnakePowerUp } from './snake.power-ups';
+import {
+  POWER_UP_META_DATA_KEY,
+  PowerUpConfig,
+  SnakePowerUp,
+} from './snake.power-ups';
 import { Point } from '../point.model';
 import { BehaviorSubject } from 'rxjs';
 import { Direction } from './snake.model';
@@ -6,13 +10,9 @@ import { auditTime } from 'rxjs/operators';
 
 export type PowerUpOnBoard = SnakePowerUp | null;
 
-export interface TileData {
-  color: string;
-}
-
 export interface BoardState {
   size: Point;
-  tiles: TileData[][];
+  tiles: any[][];
 }
 
 export class Board {
@@ -138,9 +138,32 @@ export class Board {
     return this.board.map(row => row.map(this.parseTileToEmit));
   }
 
-  private parseTileToEmit(tile: PowerUpOnBoard) {
-    return tile === null
-      ? null
-      : Reflect.getMetadata(POWER_UP_META_DATA_KEY, tile.constructor);
+  private parseTileToEmit(tile: PowerUpOnBoard): TileMetaData {
+    if (tile === null) {
+      return null;
+    } else {
+      const metaData: PowerUpConfig = Reflect.getMetadata(
+        POWER_UP_META_DATA_KEY,
+        tile.constructor,
+      );
+      if (metaData.userBlock) {
+        return {
+          id: metaData.id,
+          userBlock: metaData.userBlock,
+          userId: tile.id,
+        };
+      } else {
+        return {
+          id: metaData.id,
+          userBlock: metaData.userBlock,
+        };
+      }
+    }
   }
+}
+
+interface TileMetaData {
+  id: string;
+  userBlock: boolean;
+  userId?: string;
 }

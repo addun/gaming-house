@@ -33,7 +33,7 @@ export class SnakeEngine implements UserEvents {
       return;
     }
 
-    const snake = new Snake(this.board);
+    const snake = new Snake(this.board, id);
     this.users[id] = {
       id,
       snake,

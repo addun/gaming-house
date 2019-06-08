@@ -66,13 +66,23 @@ export class SnakeComponent implements OnInit, AfterViewInit {
       state.tiles.forEach((row, indexOfRow) =>
         row.forEach((elInRow, indexOfColumn) => {
           if (elInRow !== null) {
-            board.fillTile(
-              {
-                x: indexOfRow,
-                y: indexOfColumn,
-              },
-              stringToColor(elInRow.id),
-            );
+            if (elInRow.userBlock) {
+              board.fillTile(
+                {
+                  x: indexOfRow,
+                  y: indexOfColumn,
+                },
+                stringToColor(elInRow.userId),
+              );
+            } else {
+              board.fillTile(
+                {
+                  x: indexOfRow,
+                  y: indexOfColumn,
+                },
+                stringToColor(elInRow.id),
+              );
+            }
           }
         }),
       );

@@ -2,6 +2,7 @@ import { Snake } from './snake.model';
 import { timer } from 'rxjs';
 
 export interface SnakePowerUp {
+  id?: string;
   onPickUp(snake: Snake): void;
 }
 
@@ -13,6 +14,7 @@ export interface SnakePowerUpConstructor {
 export interface PowerUpConfig {
   id?: string;
   exclude?: boolean;
+  userBlock?: boolean;
 }
 
 export const POWER_UP_META_DATA_KEY = 'POWER_UP_META_DATA_KEY';
@@ -23,6 +25,7 @@ export function PowerUp(config: PowerUpConfig): ClassDecorator {
     const mergedConfig: PowerUpConfig = {
       id: target.name,
       exclude: false,
+      userBlock: false,
       ...config,
     };
     Reflect.defineMetadata(POWER_UP_META_DATA_KEY, mergedConfig, target);
@@ -59,8 +62,10 @@ export class LazyFood implements SnakePowerUp {
 
 @PowerUp({
   exclude: true,
+  userBlock: true,
 })
 export class SnakeBodyElement implements SnakePowerUp {
+  id;
   onPickUp(snake: Snake): void {
     snake.kill();
   }

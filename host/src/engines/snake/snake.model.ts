@@ -67,6 +67,7 @@ export class Snake {
 
   public constructor(
     private board: Board,
+    private id: string,
     initialPosition?: SnakePoint,
     private currentDirection?,
   ) {
@@ -248,7 +249,9 @@ export class Snake {
   }
 
   private setSnakeBodyElementOnBoard(point: SnakePoint) {
-    this.board.setPowerUp(point, new SnakeBodyElement());
+    const el = new SnakeBodyElement();
+    el.id = this.id;
+    this.board.setPowerUp(point, el);
   }
 
   private removeSnakeBodyElementOnBoard(point: SnakePoint) {

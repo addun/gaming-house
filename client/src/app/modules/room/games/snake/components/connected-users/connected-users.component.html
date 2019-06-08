@@ -18,8 +18,12 @@
     <div class="media-content">
       <span>{{ user }}</span>
     </div>
-    <div *ngIf="user === loggedUser" class="media-right">
-      <span class="tag is-info">You</span>
+    <div class="media-right tags">
+      <span *ngIf="user === loggedUser" class="tag is-info">You</span>
+      <span
+        class="tag is-user-color"
+        [style.background-color]="user | color"
+      ></span>
     </div>
   </div>
 </div>
