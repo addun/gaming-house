@@ -21,9 +21,9 @@ export class SnakeComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('board') public board: ElementRef<HTMLCanvasElement>;
   @ViewChild('canvasContainer') public canvasContainer: ElementRef<HTMLElement>;
 
+  public started = false;
   public users$: Observable<string[]>;
   private myId$: Observable<string>;
-  private started = false;
 
   public constructor(private snakeService: SnakeService) {}
 

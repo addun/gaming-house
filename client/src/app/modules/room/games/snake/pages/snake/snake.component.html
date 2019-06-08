@@ -7,36 +7,10 @@
     </div>
   </div>
   <div class="column">
-    <div class="card">
-      <header class="card-header">
-        <h3 class="card-header-title">Connected users</h3>
-      </header>
-      <div class="card-content" style="max-height: 200px; overflow-y: auto">
-        <div *ngFor="let user of users$ | async" class="media">
-          <div class="media-left">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M19 7.001c0 3.865-3.134 7-7 7s-7-3.135-7-7c0-3.867 3.134-7.001 7-7.001s7 3.134 7 7.001zm-1.598 7.18c-1.506 1.137-3.374 1.82-5.402 1.82-2.03 0-3.899-.685-5.407-1.822-4.072 1.793-6.593 7.376-6.593 9.821h24c0-2.423-2.6-8.006-6.598-9.819z"
-              ></path>
-            </svg>
-          </div>
-          <div class="media-content">
-            <span>{{ user }}</span>
-          </div>
-          <div class="media-right">
-            <span *ngIf="user === (myId$ | async)" class="tag is-info">
-              You
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    <app-connected-users
+      [users]="users$ | async"
+      [loggedUser]="myId$ | async"
+    ></app-connected-users>
     <app-power-ups-legend></app-power-ups-legend>
   </div>
 </div>
